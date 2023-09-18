@@ -1,5 +1,6 @@
 import { Router, Request, Response } from "express";
 import passport from "passport";
+import { initializeUser } from "../controllers/userController";
 
 const authRoutes = Router();
 
@@ -8,13 +9,15 @@ authRoutes.get(
   passport.authenticate("google", {
     scope: ["profile", "email", "https://www.googleapis.com/auth/youtube"],
     accessType: "offline",
-    prompt: "consent",
+    prompt: "consent"
   })
 );
+
 authRoutes.get(
   "/google/callback",
   passport.authenticate("google", { failureRedirect: "/" }),
   (req: any, res: Response) => {
+    console.log("callback")
     // Check if the user is authenticated by passport
     if (!req.isAuthenticated()) {
       return res.redirect("/");
@@ -22,6 +25,8 @@ authRoutes.get(
 
     // Save the user ID in the session
     req.session.userId = req.user.id;
+
+    initializeUser(req.user.id);
 
     // Redirect to the frontend or success page after successful login
     res.redirect(`${process.env.FRONTEND_URL}/dashboard?message=Login%20successful`);

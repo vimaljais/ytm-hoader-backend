@@ -10,7 +10,6 @@ export const configurePassport = (passport: any, oauthConfig: any) => {
         callbackURL: oauthConfig.google.callbackURL
       },
       async (accessToken, refreshToken, profile, done) => {
-        console.log("🚀 ~ file: authConfig.ts:13 ~ refreshToken:", refreshToken);
         try {
           // Check if the user already exists in the database
           let user = await User.findOne({ googleId: profile.id });
@@ -54,7 +53,7 @@ export const configurePassport = (passport: any, oauthConfig: any) => {
             user.oauth2!.expires_at = refresh_expires_at;
             await user.save();
           }
-          console.log("User created or updated successfully: ", user);
+          console.log("User created or updated successfully: ", user.name, " ID: ", user.id);
 
           // Pass the user object to the done function, no need to attach a token
           done(null, user);
@@ -64,7 +63,6 @@ export const configurePassport = (passport: any, oauthConfig: any) => {
       }
     )
   );
-
 
   passport.serializeUser((user: any, done: any) => {
     done(null, user.id);

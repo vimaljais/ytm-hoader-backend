@@ -18,7 +18,6 @@ async function runPythonScript(jsonData: any, func: string): Promise<PythonRespo
   try {
     console.log(`Running ${func}`)
     const messages = await PythonShell.run("src/controllers/pyWrapper.py", options);
-    console.log("🚀 ~ file: pyHandle.ts:20 ~ runPythonScript ~ messages:", messages)
     return { result: "success", data: messages.pop() };
   } catch (err) {
     console.error("Error:", err);
