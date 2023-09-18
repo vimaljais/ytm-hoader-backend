@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import User from "../models/UserModel";
 import { runPythonScript } from "../controllers/pyHandle";
 import moduleFuncs from "../config/ytmFuncs";
+import { filterLikedFromSnapshot } from "../utils/ytmUtils";
 
 const ytmRoutes = Router();
 
@@ -37,16 +38,20 @@ ytmRoutes.get("/liked", async (req: Request, res: Response) => {
     // The user object is attached by the Passport middleware
     const user: any = req.user;
     const googleId = user.googleId;
-    const oauth2Data = await User.findOne({ googleId: googleId }, { oauth2: 1, _id: 0 });
+    const userData = await User.findOne({ googleId: googleId }, { oauth2: 1 });
 
-    const likedRes = await runPythonScript(oauth2Data?.oauth2!, moduleFuncs.get_liked_songs);
+    if (!userData) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+    console.log("🚀 ~ file: ytm.ts:19 ~ ytmRoutes.get ~ userData:", userData.id);
+    const likedRes = await runPythonScript(userData?.oauth2!, moduleFuncs.get_liked_songs);
     if (likedRes.result === "error") {
       return res.status(401).json({ error: "Error getting data from the user. Reauthenticate" });
     }
+    let likedTracks = JSON.parse(likedRes.data)?.tracks;
+    likedTracks = await filterLikedFromSnapshot(likedTracks, userData?.id);
 
-    const likedDataJSON = JSON.parse(likedRes.data);
-
-    return res.json({ status: "success", data: likedDataJSON });
+    return res.json({ status: "success", data: likedTracks });
   } catch (error) {
     console.log("🚀 ~ file: ytm.ts:19 ~ ytmRoutes.get ~ error:", error);
     return res.status(401).json({ error: "Invalid or expired token" });
