@@ -1,8 +1,31 @@
 import { Router, Request, Response } from "express";
 import passport from "passport";
 import { initializeUser } from "../controllers/userController";
+import User from "../models/UserModel";
+require("dotenv").config();
+import { Strategy as JwtStrategy, ExtractJwt } from "passport-jwt";
 
 const authRoutes = Router();
+  
+const opts = {
+  jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+  secretOrKey: process.env.JWT_SECRET
+};
+
+passport.use(
+  new JwtStrategy(opts, async (jwt_payload, done) => {
+    try {
+      const user = await User.findById(jwt_payload.id);
+      if (user) {
+        return done(null, user);
+      } else {
+        return done(null, false);
+      }
+    } catch (error) {
+      return done(error, false);
+    }
+  })
+);
 
 authRoutes.get(
   "/google",
@@ -15,37 +38,35 @@ authRoutes.get(
 
 authRoutes.get(
   "/google/callback",
-  passport.authenticate("google", { failureRedirect: "/" }),
+  passport.authenticate("google", { failureRedirect: "/login", session: false }),
   (req: any, res: Response) => {
-    console.log("callback")
-    // Check if the user is authenticated by passport
+    console.log("callback");
+
     if (!req.isAuthenticated()) {
-      return res.redirect("/");
+      return res.json({ error: "Unauthorized", status: 401 });
     }
 
-    // Save the user ID in the session
-    req.session.userId = req.user.id;
+    initializeUser(req.user.userDoc.id);
 
-    initializeUser(req.user.id);
+    const apiRes = {
+      message: "Login successful",
+      status: 200,
+      token: req.user.token,
+      refreshToken: req.user.refreshToken
+    };
+    console.log("🚀 ~ file: auth.ts:57 ~ apiRes:", apiRes)
 
-    // Redirect to the frontend or success page after successful login
-    res.redirect(`${process.env.FRONTEND_URL}/dashboard?message=Login%20successful`);
+    res.json(apiRes);
   }
 );
-authRoutes.get("/user", async (req: Request, res: Response) => {
+
+authRoutes.get("/user", passport.authenticate("jwt", { session: false }), (req: any, res: Response) => {
   // Check if the user is authenticated by passport
-  if (!req.isAuthenticated()) {
+  if (!req.user) {
     return res.status(401).json({ error: "Unauthorized" });
   }
-
-  try {
-    // The user object is attached by the Passport middleware
-    const user = req.user;
-    // Return the user details as JSON response
-    return res.json(user);
-  } catch (error) {
-    return res.status(401).json({ error: "Invalid or expired token" });
-  }
+  const user = req.user;
+  return res.json(user);
 });
 
 export { authRoutes };

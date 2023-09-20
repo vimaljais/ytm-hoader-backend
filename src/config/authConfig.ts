@@ -1,5 +1,7 @@
 import User from "../models/UserModel";
 import { Strategy as GoogleStrategy } from "passport-google-oauth20";
+import jwt from "jsonwebtoken";
+import TokenModel from "../models/TokenModel";
 
 export const configurePassport = (passport: any, oauthConfig: any) => {
   passport.use(
@@ -55,26 +57,43 @@ export const configurePassport = (passport: any, oauthConfig: any) => {
           }
           console.log("User created or updated successfully: ", user.name, " ID: ", user.id);
 
-          // Pass the user object to the done function, no need to attach a token
-          done(null, user);
+          const payload = {
+            id: user.id,
+            name: user.name,
+            googleId: user.googleId
+          };
+
+          const jwtAccess = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "1h" });
+          const jwtRefresh = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "30d" });
+
+          const tokenDoc = new TokenModel({
+            _userId: user._id,
+            googleId: user.googleId,
+            refreshToken: jwtRefresh
+          });
+
+          await tokenDoc.save();
+
+          done(null, { userDoc: user, token: jwtAccess, refreshToken: jwtRefresh });
         } catch (error: any) {
           return done(error);
         }
       }
     )
   );
-
-  passport.serializeUser((user: any, done: any) => {
-    done(null, user.id);
-  });
-
-  passport.deserializeUser(async (id: any, done: any) => {
-    try {
-      //excludeing _id
-      const user = await User.findById(id).select("-_id -__v");
-      done(null, user);
-    } catch (error) {
-      done(error, null);
-    }
-  });
 };
+
+//   passport.serializeUser((user: any, done: any) => {
+//     done(null, user.id);
+//   });
+
+//   passport.deserializeUser(async (id: any, done: any) => {
+//     try {
+//       //excludeing _id
+//       const user = await User.findById(id).select("-_id -__v");
+//       done(null, user);
+//     } catch (error) {
+//       done(error, null);
+//     }
+//   });
+// };
