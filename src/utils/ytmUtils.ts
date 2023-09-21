@@ -1,5 +1,8 @@
 import LikedVideoSnapshot from "../models/LikedSnapshot";
 
+const getArtistNames = (artists: { name: string; id: string }[]) => {
+  return artists.map((artist) => artist.name).join(" & ");
+};
 const filterLikedFromSnapshot = async (likedArray: any, userId: string): Promise<any> => {
   try {
     // Find the liked snapshot for the user by userId
@@ -21,4 +24,24 @@ const filterLikedFromSnapshot = async (likedArray: any, userId: string): Promise
   }
 };
 
-export { filterLikedFromSnapshot };
+const formatLikedSongs = (likedArray: any) => {
+  const formattedSongs = [];
+  for (const singleSong of likedArray) {
+    const formattedSingle = {
+      videoId: singleSong.videoId,
+      title: singleSong.title,
+      album: singleSong.album.name,
+      thumbnails: singleSong.thumbnails,
+      isAvailable: singleSong.isAvailable,
+      isExplicit: singleSong.isExplicit,
+      videoType: singleSong.videoType,
+      duration: singleSong.duration,
+      duration_seconds: singleSong.duration_seconds,
+      artists: getArtistNames(singleSong.artists)
+    };
+    formattedSongs.push(formattedSingle);
+  }
+  return formattedSongs;
+};
+
+export { filterLikedFromSnapshot, formatLikedSongs };

@@ -63,7 +63,7 @@ export const configurePassport = (passport: any, oauthConfig: any) => {
             googleId: user.googleId
           };
 
-          const jwtAccess = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "1h" });
+          const jwtAccess = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "1m" });
           const jwtRefresh = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "30d" });
 
           const tokenDoc = new TokenModel({

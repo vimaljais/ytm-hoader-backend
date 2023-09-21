@@ -7,11 +7,15 @@ import cors from "cors";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser"; // Import the cookie-parser middleware
 import { ytmRoutes } from "./routes/ytm";
+import bodyParser from "body-parser";
 
 // Load environment variables from .env file
 require("dotenv").config();
 
 const app = express();
+app.use(bodyParser.urlencoded({ extended: true }))
+app.use(bodyParser.json())
+ 
 //cors
 const allowedOrigins = ["http://localhost:3000"];
 app.use(

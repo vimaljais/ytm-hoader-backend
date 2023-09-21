@@ -2,7 +2,8 @@ import { Router, Request, Response } from "express";
 import User from "../models/UserModel";
 import { runPythonScript } from "../controllers/pyHandle";
 import moduleFuncs from "../config/ytmFuncs";
-import { filterLikedFromSnapshot } from "../utils/ytmUtils";
+import { filterLikedFromSnapshot, formatLikedSongs } from "../utils/ytmUtils";
+import passport from "passport";
 
 const ytmRoutes = Router();
 
@@ -30,7 +31,7 @@ ytmRoutes.get("/history", async (req: Request, res: Response) => {
   }
 });
 
-ytmRoutes.get("/liked", async (req: Request, res: Response) => {
+ytmRoutes.get("/liked", passport.authenticate("jwt", { session: false }), async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Unauthorized" });
   }
@@ -50,7 +51,8 @@ ytmRoutes.get("/liked", async (req: Request, res: Response) => {
     }
     let likedTracks = JSON.parse(likedRes.data)?.tracks;
     likedTracks = await filterLikedFromSnapshot(likedTracks, userData?.id);
-
+    likedTracks = formatLikedSongs(likedTracks);
+    console.log("liked res length", { status: "success", data: likedTracks.length });
     return res.json({ status: "success", data: likedTracks });
   } catch (error) {
     console.log("🚀 ~ file: ytm.ts:19 ~ ytmRoutes.get ~ error:", error);
