@@ -6,7 +6,7 @@ const userSchema = new mongoose.Schema({
   email: { type: String },
   accessToken: { type: String, select: false },
   refreshToken: { type: String, select: false },
-  photos: { type: Schema.Types.Mixed, select: false },
+  photos: { type: Schema.Types.Mixed, },
   json: { type: Schema.Types.Mixed, select: false },
   oauth2: {
     expires_in: { type: Number, select: false },
