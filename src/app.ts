@@ -1,13 +1,16 @@
 import express from "express";
 import passport from "passport";
-import { authRoutes } from "./routes/auth";
-import { configurePassport } from "./config/authConfig";
-import { oauthConfig } from "./config/oauth";
 import cors from "cors";
 import mongoose from "mongoose";
 import cookieParser from "cookie-parser"; // Import the cookie-parser middleware
-import { ytmRoutes } from "./routes/ytm";
 import bodyParser from "body-parser";
+
+import { authRoutes } from "./routes/auth";
+import { configurePassport } from "./config/authConfig";
+import { ytmRoutes } from "./routes/ytm";
+import { oauthConfig } from "./config/oauth";
+import ytDownload from './routes/ytDownload';
+import userSettings from "./routes/userSettings";
 
 // Load environment variables from .env file
 require("dotenv").config();
@@ -49,6 +52,8 @@ app.get("/", (req, res) => {
 // Authentication routes
 app.use("/auth", authRoutes);
 app.use("/ytm", ytmRoutes);
+app.use("/ytDownload", ytDownload);
+app.use("/settings", userSettings)
 
 // Define the port to listen on (using PORT from the environment or default to 5000)
 const port = Number(process.env.PORT) || 5000;

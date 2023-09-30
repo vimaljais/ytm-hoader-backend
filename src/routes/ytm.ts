@@ -7,6 +7,37 @@ import passport from "passport";
 
 const ytmRoutes = Router();
 
+ytmRoutes.get("/liked", passport.authenticate("jwt", { session: false }), async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+  try {
+    const user: any = req.user;
+    const googleId = user.googleId;
+    const userData = await User.findOne({ googleId: googleId }, { oauth2: 1 });
+
+    if (!userData) {
+      return res.status(401).json({ error: "Invalid or expired token" });
+    }
+    console.log("🚀 ~ file: ytm.ts:19 ~ ytmRoutes.get ~ userData:", userData.id);
+
+    const likedRes = await runPythonScript(userData?.oauth2!, moduleFuncs.get_liked_songs);
+    if (likedRes.result === "error") {
+      return res.status(401).json({ error: "Error getting data from the user. Reauthenticate" });
+    }
+
+    let likedTracks = JSON.parse(likedRes.data)?.tracks;
+    likedTracks = await filterLikedFromSnapshot(likedTracks, userData?.id);
+    likedTracks = formatLikedSongs(likedTracks);
+
+    console.log("liked res length", { status: "success", data: likedTracks.length });
+    return res.json({ status: "success", data: likedTracks });
+  } catch (error) {
+    console.log("🚀 ~ file: ytm.ts:19 ~ ytmRoutes.get ~ error:", error);
+    return res.status(401).json({ error: "Invalid or expired token" });
+  }
+});
+
 ytmRoutes.get("/history", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) {
     return res.status(401).json({ error: "Unauthorized" });
@@ -30,37 +61,6 @@ ytmRoutes.get("/history", async (req: Request, res: Response) => {
     return res.status(401).json({ error: "Invalid or expired token" });
   }
 });
-
-ytmRoutes.get("/liked", passport.authenticate("jwt", { session: false }), async (req: Request, res: Response) => {
-  if (!req.isAuthenticated()) {
-    return res.status(401).json({ error: "Unauthorized" });
-  }
-  try {
-    // The user object is attached by the Passport middleware
-    const user: any = req.user;
-    const googleId = user.googleId;
-    const userData = await User.findOne({ googleId: googleId }, { oauth2: 1 });
-
-    if (!userData) {
-      return res.status(401).json({ error: "Invalid or expired token" });
-    }
-    console.log("🚀 ~ file: ytm.ts:19 ~ ytmRoutes.get ~ userData:", userData.id);
-    const likedRes = await runPythonScript(userData?.oauth2!, moduleFuncs.get_liked_songs);
-    if (likedRes.result === "error") {
-      return res.status(401).json({ error: "Error getting data from the user. Reauthenticate" });
-    }
-    let likedTracks = JSON.parse(likedRes.data)?.tracks;
-    likedTracks = await filterLikedFromSnapshot(likedTracks, userData?.id);
-    likedTracks = formatLikedSongs(likedTracks);
-    console.log("liked res length", { status: "success", data: likedTracks.length });
-    return res.json({ status: "success", data: likedTracks });
-  } catch (error) {
-    console.log("🚀 ~ file: ytm.ts:19 ~ ytmRoutes.get ~ error:", error);
-    return res.status(401).json({ error: "Invalid or expired token" });
-  }
-});
-
-//get_library_songs
 
 ytmRoutes.get("/library", async (req: Request, res: Response) => {
   if (!req.isAuthenticated()) {
