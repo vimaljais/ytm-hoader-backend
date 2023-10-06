@@ -4,6 +4,7 @@ import { runPythonScript } from "../controllers/pyHandle";
 import moduleFuncs from "../config/ytmFuncs";
 import { filterLikedFromSnapshot, formatLikedSongs } from "../utils/ytmUtils";
 import passport from "passport";
+import { updateUserTrackList } from "../controllers/userController";
 
 const ytmRoutes = Router();
 
@@ -28,6 +29,10 @@ ytmRoutes.get("/liked", passport.authenticate("jwt", { session: false }), async 
 
     let likedTracks = JSON.parse(likedRes.data)?.tracks;
     likedTracks = await filterLikedFromSnapshot(likedTracks, userData?.id);
+
+    const updateTrackRes = await updateUserTrackList(likedTracks, user);
+    console.log("🚀 ~ file: ytm.ts:34 ~ ytmRoutes.get ~ updateTrackRes:", updateTrackRes);
+
     likedTracks = formatLikedSongs(likedTracks);
 
     console.log("liked res length", { status: "success", data: likedTracks.length });

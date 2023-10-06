@@ -82,7 +82,6 @@ authRoutes.post("/refresh", async (req: Request, res: Response) => {
     // Check if the token is in store
     try {
       const tokenDoc = await TokenModel.findOne({ refreshToken: refreshToken });
-      console.log("🚀 ~ file: auth.ts:85 ~ authRoutes.post ~ tokenDoc:", tokenDoc);
 
       if (!tokenDoc) {
         return res.status(401).json({ error: "Token does not exist or has expired" });
@@ -90,7 +89,6 @@ authRoutes.post("/refresh", async (req: Request, res: Response) => {
 
       // If the token exists, then create a new one and update it in the database
       const user = await User.findOne({ _id: tokenDoc._userId });
-      console.log("🚀 ~ file: auth.ts:93 ~ authRoutes.post ~ user:", user)
 
       if (!user) {
         return res.status(401).json({ error: "Token does not exist or has expired" });
@@ -135,5 +133,6 @@ authRoutes.post("/logout", async (req: Request, res: Response) => {
   }
   return res.status(200).json({ message: "Logout successful" });
 });
+
 
 export { authRoutes };

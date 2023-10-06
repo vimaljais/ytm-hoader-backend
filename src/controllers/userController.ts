@@ -1,5 +1,6 @@
 import moduleFuncs from "../config/ytmFuncs";
 import LikedVideoSnapshot from "../models/LikedSnapshot";
+import LikedTrack from "../models/TrackModel";
 import User from "../models/UserModel";
 import UserSettings from "../models/UserSettingsModel";
 import { runPythonScript } from "./pyHandle";
@@ -88,4 +89,25 @@ const initializeUser = async (id: string) => {
   }
 };
 
-export { getLiked, initializeUser };
+const updateUserTrackList = async (tracksArray: any, user: any) => {
+  try {
+    // Create an array of update operations for each new track
+    const updateOperations = tracksArray.map((track: any) => ({
+      updateOne: {
+        filter: { user, videoId: track.videoId },
+        update: { $setOnInsert: { user }, $set: track },
+        upsert: true
+      }
+    }));
+
+    // Use bulkWrite to perform multiple update operations
+    await LikedTrack.bulkWrite(updateOperations);
+
+    return { success: true, message: "Liked tracks updated successfully" };
+  } catch (error) {
+    console.error("Error updating liked tracks:", error);
+    return { success: false, message: "Internal server error" };
+  }
+};
+
+export { getLiked, initializeUser, updateUserTrackList };
