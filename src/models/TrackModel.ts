@@ -66,8 +66,6 @@ interface IFeedbackTokens {
   remove: string;
 }
 
-// Define the LikedTrack document interface
-// Define the LikedTrack document interface
 interface ILikedTrack extends Document {
   user: Types.ObjectId;
   created_at: Date;
