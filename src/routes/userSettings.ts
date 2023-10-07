@@ -16,17 +16,17 @@ userSettings.post("/update", passport.authenticate("jwt", { session: false }), a
     const user = req.user;
 
     const { syncFrequency, downloadQuality } = req.body;
-
     let userSettings = await UserSettings.findOne({ user: user });
 
     if (!userSettings) {
-      userSettings = new userSettings({ user: user });
+      userSettings = new UserSettings({ user: user }); // Use 'UserSettings' instead of 'userSettings'
     }
 
-    userSettings.syncFrequency = syncFrequency;
-    userSettings.downloadQuality = downloadQuality;
+    userSettings!.syncFrequency = syncFrequency; // Use optional chaining 'userSettings?.'
+    userSettings!.downloadQuality = downloadQuality; // Use optional chaining 'userSettings?.'
 
-    await userSettings.save();
+    await userSettings!.save(); // Use optional chaining 'userSettings?.'
+
     console.log("Configuration Settings updated of user: ", user);
 
     res.status(200).json({ message: "User settings updated successfully" });
@@ -49,11 +49,10 @@ userSettings.get("/", passport.authenticate("jwt", { session: false }), async (r
     // Find the user settings for the authenticated user
     const userSettingsDoc = await UserSettings.findOne({ user: user });
 
-    const { syncFrequency, downloadQuality } = userSettingsDoc;
-
     if (!userSettingsDoc) {
       return res.status(404).json({ error: "User settings not found" });
     }
+    const { syncFrequency, downloadQuality } = userSettingsDoc;
 
     res.status(200).json({ status: "success", syncFrequency, downloadQuality });
   } catch (error) {

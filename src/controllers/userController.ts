@@ -3,6 +3,7 @@ import LikedVideoSnapshot from "../models/LikedSnapshot";
 import LikedTrack from "../models/TrackModel";
 import User from "../models/UserModel";
 import UserSettings from "../models/UserSettingsModel";
+import { updateTrackLastUpdated } from "../services/userServices";
 import { runPythonScript } from "./pyHandle";
 
 const getLiked = async (id: string) => {
@@ -102,6 +103,7 @@ const updateUserTrackList = async (tracksArray: any, user: any) => {
 
     // Use bulkWrite to perform multiple update operations
     await LikedTrack.bulkWrite(updateOperations);
+    updateTrackLastUpdated(user);
 
     return { success: true, message: "Liked tracks updated successfully" };
   } catch (error) {

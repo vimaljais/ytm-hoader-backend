@@ -5,6 +5,7 @@ import moduleFuncs from "../config/ytmFuncs";
 import { filterLikedFromSnapshot, formatLikedSongs } from "../utils/ytmUtils";
 import passport from "passport";
 import { updateUserTrackList } from "../controllers/userController";
+import { getTrackLastUpdated, getTrackList } from "../services/userServices";
 
 const ytmRoutes = Router();
 
@@ -22,6 +23,15 @@ ytmRoutes.get("/liked", passport.authenticate("jwt", { session: false }), async 
     }
     console.log("🚀 ~ file: ytm.ts:19 ~ ytmRoutes.get ~ userData:", userData.id);
 
+    const trackLastUpdated = await getTrackLastUpdated(userData.id);
+
+    if (!req.query?.lastest && trackLastUpdated && trackLastUpdated.getTime() - Date.now() < 3600000) {
+      console.log("Returning tracks from db cache");
+      const userTracks = formatLikedSongs(await getTrackList(userData.id));
+
+      return res.json({ status: "success", data: userTracks });
+    }
+
     const likedRes = await runPythonScript(userData?.oauth2!, moduleFuncs.get_liked_songs);
     if (likedRes.result === "error") {
       return res.status(401).json({ error: "Error getting data from the user. Reauthenticate" });
@@ -30,9 +40,7 @@ ytmRoutes.get("/liked", passport.authenticate("jwt", { session: false }), async 
     let likedTracks = JSON.parse(likedRes.data)?.tracks;
     likedTracks = await filterLikedFromSnapshot(likedTracks, userData?.id);
 
-    const updateTrackRes = await updateUserTrackList(likedTracks, user);
-    console.log("🚀 ~ file: ytm.ts:34 ~ ytmRoutes.get ~ updateTrackRes:", updateTrackRes);
-
+    updateUserTrackList(likedTracks, user);
     likedTracks = formatLikedSongs(likedTracks);
 
     console.log("liked res length", { status: "success", data: likedTracks.length });

@@ -1,4 +1,4 @@
-const mongoose = require("mongoose");
+import mongoose, { Document, Model, Types } from "mongoose";
 
 const artistSchema = new mongoose.Schema({
   name: String,
@@ -22,6 +22,11 @@ const trackSchema = new mongoose.Schema({
     ref: "User", // Reference to the User model (replace 'User' with your actual user model name)
     required: true
   },
+  created_at: {
+    type: Date,
+    default: Date.now, // Set the default value to the current timestamp
+    index: true, // Add an index on the "created_at" field
+  },
   videoId: String,
   title: String,
   artists: [artistSchema],
@@ -39,6 +44,50 @@ const trackSchema = new mongoose.Schema({
   }
 });
 
-const LikedTrack = mongoose.model("LikedTrack", trackSchema);
+// Define interfaces for nested schemas
+interface IArtist {
+  name: string;
+  id: string;
+}
+
+interface IAlbum {
+  name: string;
+  id: string;
+}
+
+interface IThumbnail {
+  url: string;
+  width: number;
+  height: number;
+}
+
+interface IFeedbackTokens {
+  add: string;
+  remove: string;
+}
+
+// Define the LikedTrack document interface
+// Define the LikedTrack document interface
+interface ILikedTrack extends Document {
+  user: Types.ObjectId;
+  created_at: Date;
+  videoId: string;
+  title: string;
+  artists: IArtist[];
+  album: IAlbum;
+  likeStatus: string;
+  thumbnails: IThumbnail[];
+  isAvailable: boolean;
+  isExplicit: boolean;
+  videoType: string;
+  duration: string;
+  duration_seconds: number;
+  feedbackTokens: IFeedbackTokens;
+}
+
+// Define the LikedTrack model type
+type LikedTrackModel = Model<ILikedTrack>;
+
+const LikedTrack: LikedTrackModel = mongoose.model<ILikedTrack, LikedTrackModel>("LikedTrack", trackSchema);
 
 export default LikedTrack;
