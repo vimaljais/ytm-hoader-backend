@@ -63,7 +63,7 @@ export const configurePassport = (passport: any, oauthConfig: any) => {
             googleId: user.googleId
           };
 
-          const jwtAccess = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "1m" });
+          const jwtAccess = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "1h" });
           const jwtRefresh = jwt.sign(payload, process.env.JWT_SECRET!, { expiresIn: "30d" });
 
           const tokenDoc = new TokenModel({
@@ -82,18 +82,3 @@ export const configurePassport = (passport: any, oauthConfig: any) => {
     )
   );
 };
-
-//   passport.serializeUser((user: any, done: any) => {
-//     done(null, user.id);
-//   });
-
-//   passport.deserializeUser(async (id: any, done: any) => {
-//     try {
-//       //excludeing _id
-//       const user = await User.findById(id).select("-_id -__v");
-//       done(null, user);
-//     } catch (error) {
-//       done(error, null);
-//     }
-//   });
-// };
