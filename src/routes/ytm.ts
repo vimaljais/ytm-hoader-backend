@@ -25,7 +25,7 @@ ytmRoutes.get("/liked", passport.authenticate("jwt", { session: false }), async 
 
     const trackLastUpdated = await getTrackLastUpdated(userData.id);
 
-    if (!req.query?.latest && trackLastUpdated && trackLastUpdated.getTime() - Date.now() < 3600000) {
+    if (!req.query?.latest && trackLastUpdated && Date.now() - trackLastUpdated.getTime() < 3600000) {
       console.log("Returning tracks from db cache");
       const userTracks = formatLikedSongs(await getTrackList(userData.id));
 
