@@ -1,10 +1,7 @@
-import express, { Router, Request, Response } from "express";
-import User from "../models/UserModel";
+import { Router, Request, Response } from "express";
 import ytdl from "ytdl-core";
-import jwt from "jsonwebtoken";
 import passport from "passport";
-import https from "https";
-import urlLib from "url";
+import { handleUserDownloadStatus } from "../controllers/ytDownload";
 
 const ytDownload = Router();
 
@@ -46,6 +43,35 @@ ytDownload.get(
       console.log("🚀 ~ file: ytDownload.ts:47 ~ video.pipe ~ error:", error);
       return res.status(500).send({ error: "Error writing the video to response" });
     });
+  }
+);
+
+ytDownload.post(
+  "/downloadstatus",
+  passport.authenticate("jwt", { session: false }),
+  async (req: Request, res: Response) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Unauthorized" });
+    }
+
+    try {
+      const { video_id } = req.body;
+      const user = req.user;
+      if (!video_id) {
+        return res.status(400).send({ error: "No music ID provided" });
+      }
+
+      const handleDowloadStatusRes = await handleUserDownloadStatus(user, video_id);
+      console.log("🚀 ~ file: ytDownload.ts:65 ~ handleDowloadStatusRes:", handleDowloadStatusRes)
+      if (handleDowloadStatusRes) {
+        return res.status(200).send({ status: "success" });
+      }
+
+      return res.status(500).send({ error: "could not update status" });
+    } catch (error) {
+      console.log("🚀 ~ file: ytDownload.ts:47 ~ video.pipe ~ error:", error);
+      return res.status(500).send({ error: "Internal Server Error" });
+    }
   }
 );
 

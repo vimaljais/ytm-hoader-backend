@@ -27,6 +27,10 @@ const trackSchema = new mongoose.Schema({
     default: Date.now, // Set the default value to the current timestamp
     index: true, // Add an index on the "created_at" field
   },
+  downloaded: {
+    type: Boolean,
+    default: false
+  },
   videoId: String,
   title: String,
   artists: [artistSchema],
@@ -66,9 +70,10 @@ interface IFeedbackTokens {
   remove: string;
 }
 
-interface ILikedTrack extends Document {
+export interface ILikedTrack extends Document {
   user: Types.ObjectId;
   created_at: Date;
+  downloaded: boolean;
   videoId: string;
   title: string;
   artists: IArtist[];
