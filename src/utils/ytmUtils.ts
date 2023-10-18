@@ -39,7 +39,8 @@ const formatLikedSongs = (likedArray: ILikedTrack[]) => {
       duration: singleSong?.duration,
       duration_seconds: singleSong?.duration_seconds,
       artists: getArtistNames(singleSong?.artists),
-      downloaded: singleSong?.downloaded
+      downloaded: singleSong?.downloaded,
+      blacklist: singleSong?.blacklist
     };
     formattedSongs.push(formattedSingle);
   }

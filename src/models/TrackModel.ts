@@ -31,6 +31,10 @@ const trackSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   },
+  blacklist: {
+    type: Boolean,
+    default: false
+  },
   videoId: String,
   title: String,
   artists: [artistSchema],
@@ -74,6 +78,7 @@ export interface ILikedTrack extends Document {
   user: Types.ObjectId;
   created_at: Date;
   downloaded: boolean;
+  blacklist: boolean;
   videoId: string;
   title: string;
   artists: IArtist[];

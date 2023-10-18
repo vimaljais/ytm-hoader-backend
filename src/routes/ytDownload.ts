@@ -1,7 +1,7 @@
 import { Router, Request, Response } from "express";
 import ytdl from "ytdl-core";
 import passport from "passport";
-import { handleUserDownloadStatus } from "../controllers/ytDownload";
+import { blackListSong, handleUserDownloadStatus } from "../controllers/ytDownload";
 
 const ytDownload = Router();
 
@@ -22,20 +22,39 @@ ytDownload.get(
 
     res.header("Content-Disposition", `attachment; filename=${musicId}.mp3`);
 
+    console.log("🚀 ~ file: ytDownload.ts:25 ~ musicId:", musicId);
     let video;
     try {
       video = ytdl(`http://www.youtube.com/watch?v=${musicId}`, { filter: "audioonly" });
     } catch (error) {
       return res.status(500).send({ error: "Error getting the video" });
     }
+    let contentLengthSet = false;
 
     video.on("response", (response) => {
-      let size = response.headers["content-length"];
-      res.setHeader("Content-Length", size);
+      if (!contentLengthSet) {
+        let size = response.headers["content-length"];
+        res.setHeader("Content-Length", size);
+        contentLengthSet = true;
+      }
     });
 
-    video.on("error", (error) => {
-      console.log("🚀 ~ file: ytDownload.ts:43 ~ video.on ~ error:", error);
+    video.on("error", async (error) => {
+      console.log("🚀 ~ file: ytDownload.ts:43 ~ video.on ~ error:", error.message);
+      if (error.message.includes("ETIMEDOUT")) {
+        try {
+          const updateBlackListRes = await blackListSong(req.user, musicId);
+          if (updateBlackListRes) {
+            console.log("Song added to blacklist: ", musicId);
+            return res.status(408).json({ error: "Song added to blacklist" });
+          }
+          console.log("Song failed to add to blacklist: ", musicId);
+          return res.status(408).json({ error: "Song added to blacklist" });
+        } catch (error) {
+          console.log("🚀 ~ file: ytDownload.ts:47 ~ video.pipe ~ error:", error);
+          return res.status(500).send({ error: "Error getting the video." });
+        }
+      }
       return res.status(500).send({ error: "Error streaming the video" });
     });
 
@@ -62,7 +81,7 @@ ytDownload.post(
       }
 
       const handleDowloadStatusRes = await handleUserDownloadStatus(user, video_id);
-      console.log("🚀 ~ file: ytDownload.ts:65 ~ handleDowloadStatusRes:", handleDowloadStatusRes)
+      console.log("🚀 ~ file: ytDownload.ts:65 ~ handleDowloadStatusRes:", handleDowloadStatusRes);
       if (handleDowloadStatusRes) {
         return res.status(200).send({ status: "success" });
       }
