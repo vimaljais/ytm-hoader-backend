@@ -26,6 +26,7 @@
     "passport-google-oauth20": "^2.0.0",
     "passport-jwt": "^4.0.1",
     "python-shell": "^5.0.0",
+    "typescript": "^5.2.2",
     "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
